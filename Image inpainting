@@ -1,0 +1,61 @@
+I = im2double(imread('C:\Users\USERTEST\Desktop\premium_photo-1694819488591-a43907d1c5cc.jpg'));
+subplot(231);
+imshow(I);
+title('Original Image');
+
+%removing blur
+LEN = 21;
+THETA = 11;
+PSF = fspecial('motion', LEN, THETA);
+blurred = imfilter(I, PSF, 'conv', 'circular');
+subplot(232);
+imshow(blurred);
+title('Blurred Image');
+
+wnr1 = deconvwnr(blurred, PSF, 0);
+subplot(233);
+imshow(wnr1);
+title('Restored Image');
+
+
+%removing blur and noise
+noise_mean = 0;
+noise_var = 0.0001;
+blurred_noisy = imnoise(blurred, 'gaussian', ...
+                        noise_mean, noise_var);
+subplot(234);
+imshow(blurred_noisy)
+title('Simulate Blur and Noise')
+
+wnr2 = deconvwnr(blurred_noisy, PSF, 0);
+subplot(235);
+imshow(wnr2)
+title('Restoration of Blurred, Noisy Image Using NSR = 0')
+
+signal_var = var(I(:));
+wnr3 = deconvwnr(blurred_noisy, PSF, noise_var / signal_var);
+subplot(236);
+imshow(wnr3)
+title('Restoration of Blurred, Noisy Image')
+
+%blur and 8-bit quantisation noise
+I = imread('C:\Users\USERTEST\Music\Screenshot_20240921_143909_Google.jpg');
+class(I)
+subplot(221);
+imshow(I);
+title('original image');
+
+blurred_quantized = imfilter(I, PSF, 'conv', 'circular');
+class(blurred_quantized)
+wnr4 = deconvwnr(blurred_quantized, PSF, 0);
+subplot(222);
+imshow(wnr4)
+title('Restoration of blurred, quantized image using NSR = 0');
+
+uniform_quantization_var = (1/256)^2 / 12;
+signal_var = var(im2double(I(:)));
+wnr5 = deconvwnr(blurred_quantized, PSF, ...
+    uniform_quantization_var / signal_var);
+subplot(223);
+imshow(wnr5)
+title('Restoration of Blurred, Quantized Image Using Computed NSR');
